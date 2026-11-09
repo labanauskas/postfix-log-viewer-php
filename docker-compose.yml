@@ -1,0 +1,62 @@
+# All services use the host network, so the app can reach Postfix on the host
+# (e.g. SMTP 127.0.0.1:25 for reports). No "ports:" mapping: nginx listens on the host directly.
+
+x-app-env: &app-env
+  TZ: ${APP_TZ:-Europe/Vilnius}
+  APP_TZ: ${APP_TZ:-Europe/Vilnius}
+  APP_HOSTNAME: ${APP_HOSTNAME:-}
+  ADMIN_USER: ${ADMIN_USER:-admin}
+  ADMIN_PASSWORD: ${ADMIN_PASSWORD:-changeme}
+  ADMIN_PASSWORD_HASH: ${ADMIN_PASSWORD_HASH:-}
+  MAIL_LOG_GLOB: ${MAIL_LOG_GLOB:-/hostlog/mail.log*}
+  DATA_DIR: /data
+  PHP_FPM_PORT: ${PHP_FPM_PORT:-9000}
+  SMTP_HOST: ${SMTP_HOST:-127.0.0.1}
+  SMTP_PORT: ${SMTP_PORT:-25}
+  SMTP_SECURITY: ${SMTP_SECURITY:-none}
+  SMTP_USER: ${SMTP_USER:-}
+  SMTP_PASS: ${SMTP_PASS:-}
+  SMTP_FROM: ${SMTP_FROM:-}
+
+services:
+  nginx:
+    image: nginx:1.27-alpine
+    network_mode: host
+    environment:
+      HTTP_BIND: ${HTTP_BIND:-0.0.0.0}
+      HTTP_PORT: ${HTTP_PORT:-8080}
+      PHP_FPM_PORT: ${PHP_FPM_PORT:-9000}
+    volumes:
+      - ./app:/var/www/html:ro
+      - ./docker/nginx/default.conf.template:/etc/nginx/templates/default.conf.template:ro
+    depends_on:
+      - php
+    restart: unless-stopped
+
+  php:
+    build:
+      context: ./docker/php
+      args:
+        LOG_GID: ${LOG_GID:-4}
+    image: postfix-viewer-php
+    network_mode: host
+    environment: *app-env
+    volumes:
+      - ./app:/var/www/html:ro
+      - ./data:/data
+      - ${MAIL_LOG_DIR:-/var/log}:/hostlog:ro
+    restart: unless-stopped
+
+  scheduler:
+    image: postfix-viewer-php
+    network_mode: host
+    entrypoint: ["php", "/var/www/html/bin/scheduler.php"]
+    user: "82:${LOG_GID:-4}"
+    environment: *app-env
+    volumes:
+      - ./app:/var/www/html:ro
+      - ./data:/data
+      - ${MAIL_LOG_DIR:-/var/log}:/hostlog:ro
+    depends_on:
+      - php
+    restart: unless-stopped

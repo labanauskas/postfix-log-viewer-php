@@ -17,6 +17,9 @@ function out(array $data, int $code = 200): never
 
 $action = (string)($_GET['action'] ?? '');
 $date = (string)($_GET['date'] ?? '');
+if ($date === 'today') {
+    $date = date('Y-m-d');
+}
 if (!valid_date($date)) {
     out(['error' => 'Invalid date'], 400);
 }
@@ -40,7 +43,8 @@ try {
         $idx = $st->fetch() ?: ['parsed_at' => null, 'lines' => 0];
         out([
             'date'      => $date,
-            'stats'     => day_stats($date),
+            'today'     => date('Y-m-d'),
+            'stats'    => day_stats($date),
             'list'      => $list,
             'parsed_at' => $idx['parsed_at'] ? date('H:i:s', (int)$idx['parsed_at']) : null,
             'lines'     => (int)$idx['lines'],

@@ -1,7 +1,7 @@
 /* Mail log page: server-side filtering/paging + detail drawer */
 (function () {
   const page = document.getElementById('page');
-  const TODAY = page.dataset.today;
+  let TODAY = page.dataset.today; // refreshed from the server on every load (page may stay open past midnight)
   const state = {
     date: page.dataset.date,
     status: page.dataset.status || '',
@@ -50,6 +50,15 @@
         return;
       }
       err.hidden = true;
+      if (data.today) {
+        TODAY = data.today;
+        $('dateInput').max = data.today;
+      }
+      if (data.date && data.date !== state.date) { // "today" resolved by the server
+        state.date = data.date;
+        $('dateInput').value = data.date;
+        syncUrl();
+      }
       render(data);
     } catch (e) {
       if (my !== reqId) return;
@@ -138,7 +147,7 @@
     if (!d) return;
     state.date = d;
     state.page = 1;
-    $('dateInput').value = d;
+    if (d !== 'today') $('dateInput').value = d;
     closeDrawer();
     syncUrl();
     load();
@@ -153,7 +162,7 @@
 
   $('prevDay').addEventListener('click', () => shiftDate(-1));
   $('nextDay').addEventListener('click', () => shiftDate(1));
-  $('todayBtn').addEventListener('click', () => setDate(TODAY));
+  $('todayBtn').addEventListener('click', () => setDate('today')); // server resolves the real current date
   $('dateInput').addEventListener('change', (e) => setDate(e.target.value));
   $('refreshBtn').addEventListener('click', () => load({ refresh: true }));
   $('statusFilter').addEventListener('change', (e) => setStatus(e.target.value));

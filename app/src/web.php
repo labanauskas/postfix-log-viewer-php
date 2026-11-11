@@ -3,9 +3,26 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/bootstrap.php';
 
+$isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+    || strtolower((string)($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https';
 session_name('pfv');
-session_set_cookie_params(['lifetime' => 0, 'path' => '/', 'httponly' => true, 'samesite' => 'Lax']);
+session_set_cookie_params(['lifetime' => 0, 'path' => '/', 'httponly' => true, 'samesite' => 'Lax', 'secure' => $isHttps]);
 session_start();
+
+/** URL of a file under public/assets with a version query, so browsers fetch it again after an update. */
+function asset(string $path): string
+{
+    $file = __DIR__ . '/../public/assets/' . $path;
+    $v = is_file($file) ? (string)filemtime($file) : '0';
+    return 'assets/' . $path . '?v=' . $v;
+}
+
+function send_page_headers(): void
+{
+    header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
+        . "img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
+    header('Cache-Control: no-store');
+}
 
 function h(?string $s): string
 {
@@ -96,6 +113,7 @@ function attempt_login(string $user, string $pass): ?string
 
 function layout_head(string $title): void
 {
+    send_page_headers();
     ?>
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
@@ -103,12 +121,11 @@ function layout_head(string $title): void
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><?= h($title) ?> — Postfix Log Viewer</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
-  <link rel="stylesheet" href="assets/admin.css">
-  <link rel="stylesheet" href="assets/app.css">
-  <script>try{var t=localStorage.getItem('adminkit-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+  <link rel="stylesheet" href="<?= h(asset('vendor/fonts.css')) ?>">
+  <link rel="stylesheet" href="<?= h(asset('vendor/tabler-icons.min.css')) ?>">
+  <link rel="stylesheet" href="<?= h(asset('admin.css')) ?>">
+  <link rel="stylesheet" href="<?= h(asset('app.css')) ?>">
+  <script src="<?= h(asset('theme-init.js')) ?>"></script>
 </head>
 <?php
 }
@@ -155,15 +172,15 @@ function layout_start(string $title, string $active): void
       </a>
     </div>
   </nav>
-  <div class="sidebar-overlay" onclick="closeMobileSidebar()" id="sidebarOverlay"></div>
+  <div class="sidebar-overlay" data-action="close-sidebar" id="sidebarOverlay"></div>
 
   <div class="main" id="mainContent">
     <header class="topbar">
-      <button class="topbar-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+      <button class="topbar-toggle" data-action="sidebar" aria-label="Toggle sidebar">
         <i class="ti ti-menu-2"></i>
       </button>
       <div class="topbar-actions">
-        <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode">
+        <button class="theme-toggle" data-action="theme" aria-label="Toggle dark mode">
           <i class="ti ti-moon" id="themeIcon"></i>
         </button>
         <div class="avatar" style="margin-left:4px;" title="<?= h($user) ?>"><?= h($initials) ?></div>
@@ -177,9 +194,9 @@ function layout_end(array $scripts = []): void
     ?>
   </div><!-- /main -->
 </div><!-- /app -->
-<script src="assets/app.js"></script>
+<script src="<?= h(asset('app.js')) ?>"></script>
 <?php foreach ($scripts as $s): ?>
-<script src="assets/<?= h($s) ?>"></script>
+<script src="<?= h(asset($s)) ?>"></script>
 <?php endforeach; ?>
 </body>
 </html>

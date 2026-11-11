@@ -11,8 +11,8 @@
     dir: 'desc',
   };
 
-  const LABEL = { sent: 'Delivered', deferred: 'Deferred', bounced: 'Bounced', rejected: 'Rejected', error: 'Error', queued: 'Queued', other: 'Other' };
-  const BADGE = { sent: 'success', deferred: 'warning', bounced: 'danger', rejected: 'danger', error: 'danger', queued: 'info', other: 'muted' };
+  const LABEL = { sent: 'Delivered', deferred: 'Deferred', bounced: 'Bounced', rejected: 'Rejected', error: 'Error', warning: 'Warning', queued: 'Queued', other: 'Other' };
+  const BADGE = { sent: 'success', deferred: 'warning', bounced: 'danger', rejected: 'danger', error: 'danger', warning: 'warning', queued: 'info', other: 'muted' };
 
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -79,6 +79,7 @@
     });
     document.querySelectorAll('.stat-card').forEach((c) => c.classList.toggle('selected', c.dataset.filter === state.status));
 
+    $('nextDay').disabled = state.date >= TODAY;
     $('subtitle').textContent = `${state.date}${state.date === TODAY ? ' (today)' : ''} · ${data.lines.toLocaleString()} Postfix lines` +
       (data.parsed_at ? ` · indexed ${data.parsed_at}` : '');
 
@@ -98,7 +99,10 @@
 
   function rowHtml(r) {
     const isEvent = r.kind === 'event';
-    const sender = r.sender === '' ? (isEvent ? '<span class="muted">—</span>' : '<span class="muted">&lt;&gt; null sender</span>') : esc(r.sender);
+    let sender;
+    if (r.sender === null || (isEvent && r.sender === '')) sender = '<span class="muted">—</span>';
+    else if (r.sender === '') sender = '<span class="muted">&lt;&gt; null sender</span>';
+    else sender = esc(r.sender);
     let to = r.rcpt ? esc(r.rcpt) : '<span class="muted">—</span>';
     if (r.rcpt_count > 1) to += ` <span class="muted">+${r.rcpt_count - 1}</span>`;
     const detail = r.status === 'sent' ? (r.relay || '') : (r.reason || r.relay || '');
@@ -106,7 +110,7 @@
     return `<tr class="clickable" tabindex="0" data-id="${esc(r.id)}">
       <td class="mono">${esc(r.ts)}</td>
       <td class="mono">${isEvent ? '<span class="muted">—</span>' : esc(r.id)}</td>
-      <td class="cell-trunc" title="${esc(r.sender)}">${sender}</td>
+      <td class="cell-trunc" title="${esc(r.sender == null ? 'Sender not in this day\'s log' : r.sender)}">${sender}</td>
       <td class="cell-trunc" title="${esc(r.rcpt)}">${to}</td>
       <td>${badge(r.status)}</td>
       <td class="cell-trunc muted" title="${esc(full)}">${esc(detail)}</td>
@@ -154,7 +158,9 @@
   }
 
   function shiftDate(n) {
-    const d = new Date(state.date + 'T12:00:00');
+    const base = state.date === 'today' ? TODAY : state.date;
+    const d = new Date(base + 'T12:00:00');
+    if (isNaN(d)) return;
     d.setDate(d.getDate() + n);
     const p = (x) => String(x).padStart(2, '0');
     setDate(`${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`);
@@ -273,7 +279,8 @@
       const bounce = m.bounce_id ? `<button class="link-btn mono" data-open="${esc(m.bounce_id)}" type="button">${esc(m.bounce_id)}</button> (bounce notification)` : '';
       html += kv([
         ['Status', LABEL[m.status] || m.status],
-        ['From', m.sender === '' ? '<> (null sender)' : m.sender],
+        ['From', m.sender === null ? 'unknown (queued before this day)' : (m.sender === '' ? '<> (null sender)' : m.sender)],
+        ['Queued on', m.continued_from ? `${m.continued_from} (continued from earlier day)` : ''],
         ['Recipients', m.recipients.length ? String(m.recipients.length) : (m.nrcpt != null ? String(m.nrcpt) : '')],
         ['Size', m.size != null ? m.size.toLocaleString() + ' bytes' : ''],
         ['Client', m.client], ['SASL user', m.sasl], ['Message-ID', m.message_id], ['Subject', m.subject],

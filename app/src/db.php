@@ -138,8 +138,18 @@ function purge_old_data(int $keepDays): void
 {
     $cut = date('Y-m-d', strtotime('-' . max(1, $keepDays) . ' days'));
     $pdo = db();
+    $deleted = 0;
     foreach (['messages', 'recipients', 'day_index'] as $t) {
-        $pdo->prepare("DELETE FROM $t WHERE date < ?")->execute([$cut]);
+        $st = $pdo->prepare("DELETE FROM $t WHERE date < ?");
+        $st->execute([$cut]);
+        $deleted += $st->rowCount();
+    }
+    if ($deleted > 0) {
+        $pdo->exec('VACUUM'); // give the space of expired days back to the disk
     }
     $pdo->prepare('DELETE FROM login_fail WHERE ts < ?')->execute([time() - 3600]);
+    // legacy per-day lock files from older versions (parsing now uses a single parse.lock)
+    foreach (glob(DATA_DIR . '/parse-*.lock') ?: [] as $f) {
+        @unlink($f);
+    }
 }

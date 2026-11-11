@@ -1,1 +1,0 @@
-(()=>{if(typeof window<`u`){var e=document.documentElement,t;try{t=localStorage.getItem(`adminkit_config_colorMode`)}catch{}t!==`light`&&t!==`dark`&&(t=matchMedia(`(prefers-color-scheme: dark)`).matches?`dark`:`light`),e.setAttribute(`data-bs-theme`,t),e.classList.add(`js-reveal`),setTimeout(()=>{e.classList.contains(`js-reveal-ready`)||e.classList.remove(`js-reveal`)},3e3)}})();

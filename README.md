@@ -1,7 +1,7 @@
 # Postfix Log Viewer
 
 Small PHP + nginx + SQLite app (no frameworks) for browsing `/var/log/mail.log`, with a daily e-mail summary.
-UI: [AdminKit](https://adminkit.io/) 4.1.0 (Bootstrap 5.3, Lucide icons, Inter font), all files local in `app/public/assets/` (no CDN). `assets/css/custom.css` holds the few additions.
+UI: custom AdminKit-style design (`assets/admin.css`), DM Sans / DM Mono fonts and Tabler icons, all served locally from `app/public/assets/` (no CDN).
 
 ## Run
 
@@ -27,11 +27,49 @@ The whole log directory (`MAIL_LOG_DIR`, default `/var/log`) is mounted read-onl
 so rotation does not break the mount. Rotated files (`mail.log.1`, `mail.log.2.gz`) are read too
 (`MAIL_LOG_GLOB`).
 
+## Updating (`deploy.sh`)
+
+Run on the server, in the app folder (as root or a `docker` group member):
+
+```bash
+./deploy.sh update ~/postfix-viewer.tar.gz      # install a new package
+./deploy.sh pull                                # or: update from the git remote (git pull --ff-only)
+./deploy.sh rollback                            # undo the last update
+```
+
+What an update does:
+
+1. Unpacks the package to a temp folder and checks every PHP file with the app's own PHP image.
+   A package with errors is refused before anything changes.
+2. Shows what will change (files, `docker-compose.yml` diff, new `.env.example` settings) and asks to confirm.
+3. Backs up `app/`, `docker/`, `docker-compose.yml`, `README.md`, `.env.example` to `backups/`
+   (last 10 kept, `KEEP_BACKUPS=20 ./deploy.sh ...` to change).
+4. Copies the new files in place. **`.env` and `data/` are never touched.**
+5. Restarts only what is needed: rebuilds the PHP image if `docker/php/` or `docker-compose.yml` changed,
+   recreates nginx if its config changed, and always restarts the scheduler (it keeps old code in memory).
+6. Checks that `http://127.0.0.1:HTTP_PORT/login.php` answers. If not, it restores the backup automatically.
+
+Other commands and options:
+
+| Command | |
+|---|---|
+| `./deploy.sh status` | containers, health check, git state, last deployment |
+| `./deploy.sh backups` | list backups and the deployment log |
+| `./deploy.sh backup [--with-db]` | backup now |
+| `./deploy.sh rollback [backup-....tar.gz]` | restore the newest or a named backup |
+| `./deploy.sh restart` | rebuild and restart everything, then health check |
+| `-y` | do not ask (for scripts and cron) |
+| `--with-db` | also snapshot the SQLite database (`backup-....db`; can be large) |
+| `--commit` / `--push` | after `update`: git commit the new files / push to every remote |
+
+Requirements on the host: `bash`, `tar`, `curl`, `diff`, Docker Compose.
+The first time, copy `deploy.sh` from the package into the app folder by hand; after that it updates itself.
+
 ## Features
 
 - Pick any date; messages are grouped by Postfix queue ID.
-- Status per message: **Delivered**, **Deferred**, **Bounced**, **Rejected**, **Error**, **Queued/Other**.
-  `NOQUEUE: reject` lines and `warning/error/fatal/panic` lines appear as separate entries.
+- Status per message: **Delivered**, **Deferred**, **Bounced**, **Rejected**, **Error**, **Warning**, **Queued/Other**.
+  `NOQUEUE: reject` / `milter-reject` lines and `warning/error/fatal/panic` lines appear as separate entries.
 - Stat cards, status filter, search (sender, recipient, queue ID, Message-ID, client, reason), paging, sort by time.
 - Click a row: drawer with summary, per-recipient status (relay, DSN, delay, response), related bounce
   notification, and the raw log lines.

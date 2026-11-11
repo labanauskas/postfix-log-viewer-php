@@ -82,9 +82,12 @@ function build_report(string $date, array $s): array
         ['Deferred', $st['deferred'], '#D97706'],
         ['Bounced', $st['bounced'], '#DC2626'],
         ['Rejected', $st['rejected'], '#DC2626'],
-        ['Errors / warnings', $st['error'], '#DC2626'],
+        ['Errors', $st['error'], '#DC2626'],
+        ['Warnings', $st['warning'], '#D97706'],
         ['Queued / other', $st['queued'] + $st['other'], '#6366F1'],
     ];
+    $tiles = $sum;
+    $tiles[] = ['Recipient success rate', $d['rate'] === null ? null : $d['rate'] . '%', '#1C1917'];
 
     $th = 'style="text-align:left;padding:6px 10px;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#78716C;border-bottom:1px solid #E7E5E4;"';
     $td = 'style="padding:6px 10px;font-size:13px;border-bottom:1px solid #F5F5F4;vertical-align:top;"';
@@ -94,25 +97,23 @@ function build_report(string $date, array $s): array
     $h .= '<h1 style="font-size:20px;margin:0 0 4px;">Mail delivery report</h1>';
     $h .= '<div style="font-size:13px;color:#78716C;">' . rep_h($date) . ' &middot; ' . rep_h($host) . '</div>';
 
-    $h .= '<table style="width:100%;border-collapse:collapse;margin-top:18px;"><tr>';
-    foreach (array_slice($sum, 0, 4) as [$label, $val, $color]) {
-        $h .= '<td style="padding:12px;border:1px solid #E7E5E4;"><div style="font-size:11px;color:#78716C;">' . rep_h($label)
-            . '</div><div style="font-size:22px;font-weight:bold;color:' . $color . ';">' . number_format((int)$val) . '</div></td>';
+    $h .= '<table style="width:100%;border-collapse:collapse;margin-top:18px;">';
+    foreach (array_chunk($tiles, 3) as $row) {
+        $h .= '<tr>';
+        foreach ($row as [$label, $val, $color]) {
+            $shown = $val === null ? '&ndash;' : (is_int($val) ? number_format($val) : rep_h((string)$val));
+            $h .= '<td style="width:33%;padding:12px;border:1px solid #E7E5E4;"><div style="font-size:11px;color:#78716C;">' . rep_h($label)
+                . '</div><div style="font-size:22px;font-weight:bold;color:' . $color . ';">' . $shown . '</div></td>';
+        }
+        $h .= '</tr>';
     }
-    $h .= '</tr><tr>';
-    foreach (array_slice($sum, 4) as [$label, $val, $color]) {
-        $h .= '<td style="padding:12px;border:1px solid #E7E5E4;"><div style="font-size:11px;color:#78716C;">' . rep_h($label)
-            . '</div><div style="font-size:22px;font-weight:bold;color:' . $color . ';">' . number_format((int)$val) . '</div></td>';
-    }
-    $h .= '<td style="padding:12px;border:1px solid #E7E5E4;"><div style="font-size:11px;color:#78716C;">Recipient success rate</div>'
-        . '<div style="font-size:22px;font-weight:bold;">' . ($d['rate'] === null ? '&ndash;' : $d['rate'] . '%') . '</div></td>';
-    $h .= '</tr></table>';
+    $h .= '</table>';
 
     $t = "Mail delivery report - $date - $host\n\n";
     foreach ($sum as [$label, $val]) {
-        $t .= str_pad($label . ':', 22) . $val . "\n";
+        $t .= str_pad($label . ':', 24) . $val . "\n";
     }
-    $t .= str_pad('Recipient success rate:', 22) . ($d['rate'] === null ? 'n/a' : $d['rate'] . '%') . "\n";
+    $t .= str_pad('Recipient success rate:', 24) . ($d['rate'] === null ? 'n/a' : $d['rate'] . '%') . "\n";
 
     if ($d['senders']) {
         $h .= "<h2 $h2>Top senders</h2><table style=\"width:100%;border-collapse:collapse;\"><tr><th $th>Sender</th><th $th>Messages</th></tr>";

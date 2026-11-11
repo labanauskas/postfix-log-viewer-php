@@ -9,8 +9,11 @@ if (is_logged_in()) {
 
 $error = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    csrf_check();
-    $error = attempt_login(trim((string)($_POST['username'] ?? '')), (string)($_POST['password'] ?? ''));
+    if (!hash_equals(csrf_token(), (string)($_POST['csrf'] ?? ''))) {
+        $error = 'Your session expired. Please sign in again.';
+    } else {
+        $error = attempt_login(trim((string)($_POST['username'] ?? '')), (string)($_POST['password'] ?? ''));
+    }
     if ($error === null) {
         header('Location: index.php');
         exit;
@@ -21,7 +24,7 @@ layout_head('Sign in');
 ?>
 <body>
 
-<button class="login-theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode" type="button">
+<button class="login-theme-toggle" data-action="theme" aria-label="Toggle dark mode" type="button">
   <i class="ti ti-moon" id="themeIcon"></i>
 </button>
 

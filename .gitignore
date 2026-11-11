@@ -1,4 +1,46 @@
+# ── Runtime data ─────────────────────────────────────────────
+# SQLite database: settings (incl. SMTP password), parsed mail logs
+# (senders, recipients, subjects), report history, login attempts.
 data/*
 !data/.gitkeep
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+*.sqlite
+*.sqlite3
+*.lock
+
+# ── Secrets / local configuration ────────────────────────────
 .env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*.csr
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+
+# ── Deploy backups and packages ──────────────────────────────
+# backups/ holds code copies, database snapshots and the deploy log.
+backups/
 *.tar.gz
+*.tgz
+*.zip
+*.new
+
+# ── Logs (may contain mail addresses) ────────────────────────
+*.log
+mail.log*
+
+# ── Editor / OS files ────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.idea/
+.vscode/

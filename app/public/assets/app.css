@@ -39,7 +39,9 @@ textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in
 }
 
 /* stat cards as filters */
-.stats-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.stats-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (min-width: 1300px) { .stats-grid { grid-template-columns: repeat(8, minmax(0, 1fr)); } }
+@media (max-width: 768px) { .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .stat-card.clickable { cursor: pointer; }
 .stat-card.clickable:hover { border-color: var(--border-focus); }
 .stat-card.selected { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent); }
@@ -127,3 +129,6 @@ thead th { position: sticky; top: 0; }
 @media (max-width: 480px) {
   .filters { display: flex; }
 }
+
+.icon-btn:disabled { opacity: .35; cursor: not-allowed; }
+.icon-btn:disabled:hover { background: none; color: var(--text-2); }

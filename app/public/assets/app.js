@@ -34,3 +34,13 @@ function closeMobileSidebar() {
   const sb = document.getElementById('sidebar');
   if (sb) sb.classList.remove('mobile-open');
 }
+
+/* Click handlers (no inline onclick attributes: the Content-Security-Policy blocks them) */
+document.addEventListener('click', function (e) {
+  const el = e.target.closest('[data-action]');
+  if (!el) return;
+  const a = el.dataset.action;
+  if (a === 'theme') toggleTheme();
+  else if (a === 'sidebar') toggleSidebar();
+  else if (a === 'close-sidebar') closeMobileSidebar();
+});

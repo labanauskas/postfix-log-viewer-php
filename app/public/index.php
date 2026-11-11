@@ -53,8 +53,12 @@ layout_start('Mail log', 'logs');
           <div class="stat-value" data-stat="rejected">–</div>
         </div>
         <div class="stat-card clickable" role="listitem" data-filter="error" tabindex="0">
-          <div class="stat-label"><i class="ti ti-alert-triangle" aria-hidden="true"></i> Errors</div>
+          <div class="stat-label"><i class="ti ti-alert-circle" aria-hidden="true"></i> Errors</div>
           <div class="stat-value" data-stat="error">–</div>
+        </div>
+        <div class="stat-card clickable" role="listitem" data-filter="warning" tabindex="0">
+          <div class="stat-label"><i class="ti ti-alert-triangle" aria-hidden="true"></i> Warnings</div>
+          <div class="stat-value" data-stat="warning">–</div>
         </div>
         <div class="stat-card clickable" role="listitem" data-filter="queued" tabindex="0">
           <div class="stat-label"><i class="ti ti-hourglass" aria-hidden="true"></i> Queued / other</div>
@@ -77,6 +81,7 @@ layout_start('Mail log', 'logs');
               <option value="bounced">Bounced</option>
               <option value="rejected">Rejected</option>
               <option value="error">Errors</option>
+              <option value="warning">Warnings</option>
               <option value="queued">Queued / other</option>
             </select>
             <select id="perFilter" aria-label="Rows per page">

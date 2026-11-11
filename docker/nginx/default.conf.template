@@ -6,6 +6,7 @@ server {
     index index.php;
 
     client_max_body_size 1m;
+    server_tokens off;
 
     add_header X-Content-Type-Options nosniff always;
     add_header X-Frame-Options DENY always;
@@ -15,11 +16,17 @@ server {
         try_files $uri $uri/ =404;
     }
 
+    # Static files carry ?v=<mtime> (see asset() in src/web.php), so long caching is safe.
+    location /assets/ {
+        expires 30d;
+        try_files $uri =404;
+    }
+
     location ~ \.php$ {
         include fastcgi_params;
         fastcgi_pass 127.0.0.1:${PHP_FPM_PORT};
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-        fastcgi_read_timeout 120s;
+        fastcgi_read_timeout 300s;
     }
 
     location ~ /\. {

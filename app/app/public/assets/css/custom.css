@@ -1,0 +1,75 @@
+/* Small additions on top of AdminKit 4.x (assets/css/app.css). Uses Bootstrap color-mode variables, so light/dark both work. */
+
+.min-w-0 { min-width: 0; }
+
+/* stat cards act as status filters */
+.stat-filter { cursor: pointer; transition: border-color .15s, box-shadow .15s; }
+.stat-filter:hover { border-color: var(--bs-border-color-translucent); box-shadow: var(--bs-box-shadow-sm); }
+.stat-filter:focus-visible { outline: 2px solid var(--bs-primary); outline-offset: 2px; }
+.stat-filter.selected { border-color: var(--bs-primary); box-shadow: 0 0 0 .2rem rgba(var(--bs-primary-rgb), .2); }
+
+/* log table */
+#tableSection.table-loading { opacity: .55; transition: opacity .15s; }
+#tableBody tr.clickable { cursor: pointer; }
+#tableBody tr.clickable.selected > * { background-color: var(--bs-primary-bg-subtle); }
+#tableBody tr.clickable:focus-visible { outline: 2px solid var(--bs-primary); outline-offset: -2px; }
+td.cell-trunc { max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mono { font-family: var(--bs-font-monospace); font-size: .8125rem; }
+.muted { color: var(--bs-secondary-color); }
+
+/* detail drawer */
+.offcanvas.offcanvas-end { width: min(640px, 100%); }
+.offcanvas-title { font-size: 1rem; overflow: hidden; text-overflow: ellipsis; }
+.drawer-sec { margin-bottom: 1.5rem; }
+.drawer-sec h3 {
+  font-size: .6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--bs-secondary-color); margin-bottom: .625rem;
+}
+.kv { display: grid; grid-template-columns: 130px 1fr; gap: .5rem 1rem; font-size: .875rem; margin: 0; }
+.kv dt { color: var(--bs-secondary-color); font-weight: 400; }
+.kv dd { margin: 0; word-break: break-word; }
+.link-btn { color: var(--bs-primary); text-decoration: underline; padding: 0; background: none; border: 0; }
+.rcpt-list { display: flex; flex-direction: column; gap: .5rem; }
+.rcpt {
+  border: 1px solid var(--bs-border-color); border-radius: var(--bs-border-radius);
+  padding: .625rem .75rem; font-size: .8125rem; background: var(--bs-tertiary-bg);
+}
+.rcpt-top { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-bottom: .125rem; font-size: .875rem; word-break: break-all; }
+.rcpt-resp { margin-top: .375rem; color: var(--bs-body-color); word-break: break-word; }
+.warn-list { padding-left: 1.125rem; font-size: .8125rem; color: var(--bs-warning-text-emphasis); margin: 0; }
+.raw-log {
+  background: var(--bs-tertiary-bg); border: 1px solid var(--bs-border-color); border-radius: var(--bs-border-radius);
+  padding: .75rem; font: .75rem/1.6 var(--bs-font-monospace); overflow-x: auto; white-space: pre;
+  color: var(--bs-secondary-color); margin: 0;
+}
+.raw-log .l-bad { color: var(--bs-danger); }
+.raw-log .l-warn { color: var(--bs-warning-text-emphasis); }
+.raw-log .l-ok { color: var(--bs-success); }
+
+@media (max-width: 767.98px) {
+  td.cell-trunc { max-width: 160px; }
+  .kv { grid-template-columns: 100px 1fr; }
+}
+@media (min-width: 1400px) {
+  .row-cols-xxl-8 > * { flex: 0 0 auto; width: 12.5%; }
+}
+
+/* components missing from the AdminKit CSS bundle */
+.pagination { display: flex; flex-wrap: wrap; gap: .25rem; padding: 0; margin: 0; list-style: none; }
+.page-item .page-link {
+  display: block; min-width: 2rem; padding: .25rem .5rem; text-align: center; line-height: 1.5; font-size: .8125rem;
+  color: var(--bs-body-color); background: transparent; border: 1px solid transparent; border-radius: var(--bs-border-radius);
+}
+.page-item .page-link:hover { background: var(--bs-tertiary-bg); }
+.page-item.active .page-link { color: var(--bs-primary); border-color: var(--bs-primary); background: var(--bs-primary-bg-subtle); }
+.page-item.disabled .page-link { opacity: .4; cursor: not-allowed; pointer-events: none; }
+.spinner-border {
+  display: inline-block; width: 1.5rem; height: 1.5rem; vertical-align: -.125em;
+  border: .2em solid currentcolor; border-right-color: transparent; border-radius: 50%;
+  animation: pfv-spin .75s linear infinite;
+}
+.spinner-border-sm { width: 1rem; height: 1rem; border-width: .15em; }
+@keyframes pfv-spin { to { transform: rotate(360deg); } }
+
+/* header date picker */
+#dateInput { flex: 0 0 9.5rem; width: 9.5rem; }

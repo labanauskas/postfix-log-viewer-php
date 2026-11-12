@@ -1,4 +1,4 @@
-# Postfix Log Viewer
+# Postfix Log Viewer with PHP
 
 Small PHP + nginx + SQLite app (no frameworks) for browsing `/var/log/mail.log`, with a daily e-mail summary.
 UI: custom AdminKit-style design (`assets/admin.css`), DM Sans / DM Mono fonts and Tabler icons, all served locally from `app/public/assets/` (no CDN).
